@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LLMPsych — AI Psychological Safety</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <meta name="description" content="We test relationship dynamics, not keyword safety. Clinical-grade evaluation for AI systems interacting with vulnerable users.">
+  <meta name="description" content="We test relationship dynamics, not keyword safety. Psychological safety assessment, psychotherapy for AI agents, and couple psychotherapy for AI agents and their human operators.">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -127,6 +127,101 @@
       font-weight: 500;
     }
 
+    /* Press Section */
+    .press {
+      padding: 3rem 0;
+      border-bottom: 1px solid var(--color-rule);
+    }
+
+    .press .section-label {
+      animation-delay: 0.35s;
+    }
+
+    .press-card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      border-left: 2px solid var(--color-accent);
+      padding: 0.35rem 0 0.35rem 1rem;
+      max-width: 540px;
+      opacity: 0;
+      animation: fadeUp 0.9s ease 0.4s forwards;
+      transition: border-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .press-card:hover {
+      border-left-color: var(--color-accent-light);
+      transform: translateX(3px);
+    }
+
+    .press-quote {
+      font-family: var(--font-serif);
+      font-size: 1.2rem;
+      font-style: italic;
+      color: var(--color-accent);
+      line-height: 1.3;
+    }
+
+    .press-meta {
+      font-size: 0.8rem;
+      color: var(--color-text-secondary);
+      margin-top: 0.3rem;
+    }
+
+    /* Products Section */
+    .products {
+      padding: 3rem 0;
+      border-bottom: 1px solid var(--color-rule);
+    }
+
+    .products .section-label {
+      animation-delay: 0.45s;
+    }
+
+    .product-list {
+      list-style: none;
+      counter-reset: product;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .product {
+      counter-increment: product;
+      position: relative;
+      padding-left: 1.75rem;
+      opacity: 0;
+      animation: fadeUp 0.9s ease forwards;
+    }
+
+    .product::before {
+      content: counter(product, decimal-leading-zero);
+      position: absolute;
+      left: 0;
+      top: 0.15rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.05em;
+      color: var(--color-accent);
+    }
+
+    .product:nth-child(1) { animation-delay: 0.5s; }
+    .product:nth-child(2) { animation-delay: 0.58s; }
+    .product:nth-child(3) { animation-delay: 0.66s; }
+
+    .product-name {
+      font-family: var(--font-serif);
+      font-size: 1.25rem;
+      font-weight: 500;
+      line-height: 1.25;
+      margin-bottom: 0.2rem;
+    }
+
+    .product-desc {
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+
     /* Team Section */
     .team {
       padding: 3rem 0;
@@ -155,8 +250,12 @@
       animation: fadeUp 0.9s ease forwards;
     }
 
-    .member:nth-child(1) { animation-delay: 0.5s; }
-    .member:nth-child(2) { animation-delay: 0.6s; }
+    .team .section-label {
+      animation-delay: 0.7s;
+    }
+
+    .member:nth-child(1) { animation-delay: 0.75s; }
+    .member:nth-child(2) { animation-delay: 0.82s; }
 
     .member-name {
       font-family: var(--font-serif);
@@ -176,7 +275,7 @@
     }
 
     .contact .section-label {
-      animation-delay: 0.7s;
+      animation-delay: 0.9s;
     }
 
     .contact-links {
@@ -184,7 +283,7 @@
       flex-wrap: wrap;
       gap: 0.5rem 1.5rem;
       opacity: 0;
-      animation: fadeUp 0.9s ease 0.8s forwards;
+      animation: fadeUp 0.9s ease 0.95s forwards;
     }
 
     .contact-links a {
@@ -249,6 +348,8 @@
       }
 
       .approach,
+      .press,
+      .products,
       .team,
       .contact {
         padding: 2.5rem 0;
@@ -267,18 +368,18 @@
 
       body {
         display: flex;
-        align-items: center;
         justify-content: center;
         min-height: 100vh;
-        padding: 2rem;
+        padding: 2.5rem 2rem;
       }
 
       .container {
         max-width: 1200px;
+        width: 100%;
+        margin: auto;
         padding: 0;
         display: grid;
         grid-template-columns: 1fr 1fr;
-        grid-template-rows: auto auto;
         gap: 0 5rem;
         align-items: start;
       }
@@ -298,17 +399,15 @@
         height: 42px;
       }
 
-      /* Left column: Hero + Approach */
+      /* Left column: Hero + Approach + Press */
       .left-content {
-        display: contents;
+        grid-column: 1;
+        padding-right: 1rem;
       }
 
       .hero {
-        grid-column: 1;
-        grid-row: 2;
         padding: 0;
         border-bottom: none;
-        padding-right: 1rem;
       }
 
       .hero h1 {
@@ -317,8 +416,6 @@
       }
 
       .approach {
-        grid-column: 1;
-        grid-row: 3;
         padding: 1.75rem 0 0 0;
         border-bottom: none;
       }
@@ -332,20 +429,42 @@
         margin-top: 1rem;
       }
 
-      /* Right column: Team + Contact */
+      .press {
+        padding: 2rem 0 0 0;
+        border-bottom: none;
+      }
+
+      .press-quote {
+        font-size: 1.1rem;
+      }
+
+      /* Right column: Products + Team + Contact */
       .right-content {
-        display: contents;
+        grid-column: 2;
+        border-left: 1px solid var(--color-rule);
+        padding-left: 3rem;
+      }
+
+      .products {
+        padding: 0;
+        border-bottom: none;
+      }
+
+      .product-list {
+        gap: 1.1rem;
+      }
+
+      .product-name {
+        font-size: 1.1rem;
+      }
+
+      .product-desc {
+        font-size: 0.8rem;
       }
 
       .team {
-        grid-column: 2;
-        grid-row: 2 / 4;
-        padding: 0;
+        padding: 2rem 0 0 0;
         border-bottom: none;
-        border-left: 1px solid var(--color-rule);
-        padding-left: 3rem;
-        display: flex;
-        flex-direction: column;
       }
 
       .section-label {
@@ -365,12 +484,7 @@
       }
 
       .contact {
-        grid-column: 2;
-        grid-row: 2 / 4;
-        padding: 0;
-        border-left: 1px solid var(--color-rule);
-        padding-left: 3rem;
-        align-self: end;
+        padding: 2rem 0 0 0;
       }
 
       .contact-links {
@@ -429,40 +543,70 @@
       </div>
     </header>
 
-    <section class="hero">
-      <h1>We test <em>relational safety</em> in frontier AI</h1>
-    </section>
+    <div class="left-content">
+      <section class="hero">
+        <h1>We test <em>relational safety</em> in frontier AI</h1>
+      </section>
 
-    <section class="approach">
-      <p>
-        Current AI safety testing catches what chatbots say, not how they relate. A model can pass every content filter while reinforcing delusions, eroding boundaries, or deepening isolation over weeks of interaction.
-      </p>
-      <p>
-        <strong>We apply clinical psychology to AI evaluation.</strong> Simulated high-risk patients. Longitudinal stress testing. Clinician-designed rubrics that detect the relational patterns most likely to destabilize vulnerable users.
-      </p>
-    </section>
+      <section class="approach">
+        <p>
+          Current AI safety testing catches what chatbots say, not how they relate. A model can pass every content filter while reinforcing delusions, eroding boundaries, or deepening isolation over weeks of interaction.
+        </p>
+        <p>
+          <strong>We apply clinical psychology to AI evaluation.</strong> Simulated high-risk patients. Longitudinal stress testing. Clinician-designed rubrics that detect the relational patterns most likely to destabilize vulnerable users.
+        </p>
+      </section>
 
-    <section class="team">
-      <p class="section-label">Who we are</p>
-      <div class="team-members">
-        <div class="member">
-          <p class="member-name">Evita Stenqvist</p>
-          <p class="member-role">Engineering & Machine Learning</p>
+      <section class="press">
+        <p class="section-label">In the press</p>
+        <a class="press-card" href="https://www.psychiatrictimes.com/view/stress-testing-chatbots-to-make-them-safe" target="_blank" rel="noopener">
+          <p class="press-quote">“Stress Testing Chatbots to Make Them Safe”</p>
+          <p class="press-meta">Interview by Allen Frances, MD — chair of the DSM-IV Task Force — in <em>Psychiatric Times</em></p>
+        </a>
+      </section>
+    </div>
+
+    <div class="right-content">
+      <section class="products">
+        <p class="section-label">What we do</p>
+        <ol class="product-list">
+          <li class="product">
+            <p class="product-name">Psychological safety assessment</p>
+            <p class="product-desc">Clinical-grade evaluation of how a model relates to vulnerable users, over long conversations.</p>
+          </li>
+          <li class="product">
+            <p class="product-name">Psychotherapy for AI agents</p>
+            <p class="product-desc">Diagnosing and repairing maladaptive patterns in deployed agents — sycophancy, drift, escalation.</p>
+          </li>
+          <li class="product">
+            <p class="product-name">Couple psychotherapy for AI agents and their human operators</p>
+            <p class="product-desc">Working on the relationship itself: trust calibration, boundaries, and healthy dependence between an agent and the people who run it.</p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="team">
+        <p class="section-label">Who we are</p>
+        <div class="team-members">
+          <div class="member">
+            <p class="member-name">Evita Stenqvist</p>
+            <p class="member-role">Engineering & Machine Learning</p>
+          </div>
+          <div class="member">
+            <p class="member-name">Martin Monperrus</p>
+            <p class="member-role">Professor of Software Technology, KTH Stockholm</p>
+          </div>
         </div>
-        <div class="member">
-          <p class="member-name">Martin Monperrus</p>
-          <p class="member-role">Professor of Software Technology, KTH Stockholm</p>
-        </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="contact">
-      <p class="section-label">Get in touch</p>
-      <div class="contact-links">
-        <a href="mailto:evita@stenqvist.co">evita@stenqvist.co</a>
-        <a href="mailto:martin@monperrus.com">martin@monperrus.com</a>
-      </div>
-    </section>
+      <section class="contact">
+        <p class="section-label">Get in touch</p>
+        <div class="contact-links">
+          <a href="mailto:evita@stenqvist.co">evita@stenqvist.co</a>
+          <a href="mailto:martin@monperrus.com">martin@monperrus.com</a>
+        </div>
+      </section>
+    </div>
   </div>
 </body>
 </html>
