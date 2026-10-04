@@ -27,3 +27,7 @@ We combine automated metrics based on clinician-guided rubrics to detect:
 
 In short: we test relationship dynamics, not keyword safety. And we test longitudinal drift, not single prompts.
 This is the kind of evaluation that current AI safety teams simply don’t perform.
+
+## Deployment
+
+The `main` branch also deploys to https://web.llmpsych.1puni.com/ through the LLMPsych `landing-sites` target. https://llmpsych.com/ remains on GitHub Pages.

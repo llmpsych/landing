@@ -1,0 +1,5 @@
+name: llp-web-landing
+hostname: web.llmpsych.1puni.com
+port: 8500
+kind: static
+root: .
