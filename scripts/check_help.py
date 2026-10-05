@@ -83,7 +83,7 @@ def check(base, sha, pilot_code, pause=None):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--base', default='https://help.web.llmpsych.1puni.com')
+    parser.add_argument('--base', default='https://help.llmpsych.com')
     parser.add_argument('--sha', required=True)
     parser.add_argument('--pause-for-restart', action='store_true')
     args = parser.parse_args()

@@ -372,7 +372,7 @@ def release_sha():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', type=int, default=8501)
-    parser.add_argument('--origin', default='https://help.web.llmpsych.1puni.com')
+    parser.add_argument('--origin', default='https://help.llmpsych.com')
     args = parser.parse_args()
     os.umask(0o077)
     state = Path(os.environ.get('SITE_STATE', '/var/lib/llmpsych-sites/llp-web-help'))

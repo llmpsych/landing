@@ -1,8 +1,8 @@
 name: llp-web-help
-hostname: help.web.llmpsych.1puni.com
+hostname: help.llmpsych.com
 port: 8501
 kind: service
 runtime: python3.12
 workdir: .
-argv: [help_service/server.py, --port, "8501", --origin, "https://help.web.llmpsych.1puni.com"]
+argv: [help_service/server.py, --port, "8501", --origin, "https://help.llmpsych.com"]
 health: /healthz

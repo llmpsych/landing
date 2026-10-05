@@ -36,6 +36,8 @@ The `main` branch also deploys to https://web.llmpsych.1puni.com/ through the LL
 
 The separate agent-first service, API contract, privacy boundaries, local checks and
 five-minute demo script are documented in [docs/agent-help.md](docs/agent-help.md).
+The service declaration targets https://help.llmpsych.com/; the controller owns
+the exact-host grant, DNS access and verified cutover described in that document.
 The preview at https://help.web.llmpsych.1puni.com/ completed live native bootstrap
 and app acceptance on 5 October 2026. The [dated acceptance record](docs/agent-help.md#live-acceptance-5-october-2026)
 names the exact tested revisions, receipt provenance and limits; later revisions

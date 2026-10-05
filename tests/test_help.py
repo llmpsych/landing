@@ -41,7 +41,7 @@ class HelpTests(unittest.TestCase):
 
     def start(self, config=CONFIG):
         self.service = Service(Path(self.temp.name), config, 'a' * 40, self.fixture)
-        self.server = Server(('127.0.0.1', 0), self.service, 'https://help.web.llmpsych.1puni.com')
+        self.server = Server(('127.0.0.1', 0), self.service, 'https://help.llmpsych.com')
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
         self.url = f'http://127.0.0.1:{self.server.server_port}'
@@ -144,6 +144,14 @@ class HelpTests(unittest.TestCase):
             self.service.mutation.release()
         with self.assertRaises(Problem):
             Service(Path(__file__).resolve().parents[1] / 'private-test', CONFIG)
+
+    def test_production_browser_origin(self):
+        status, result = self.request('/api/sessions', 'POST', INTAKE,
+                                      CONFIG['pilot_code'], {'Origin': 'https://help.llmpsych.com'})
+        self.assertEqual(status, 201, result)
+        for origin in ['https://help.web.llmpsych.1puni.com', 'https://other.llmpsych.com']:
+            self.assertEqual(self.request('/api/sessions', 'POST', INTAKE,
+                CONFIG['pilot_code'], {'Origin': origin})[0], 403)
 
     def test_expiry_and_persistent_quotas(self):
         token = self.create()

@@ -2,7 +2,7 @@
 
 Landing owns the complete service, UI, machine entry and native deployment declaration.
 Existing llmpsych.com and `llp-web-landing` are unchanged. The intended supported URL is
-**https://help.web.llmpsych.1puni.com/**. A declaration is not evidence of publication,
+**https://help.llmpsych.com/**. A declaration is not evidence of publication,
 target convergence, or a successful live conversation.
 
 ## Entities, lifecycle and authority
@@ -86,7 +86,7 @@ survive restart. Quotas count attempts, including failed provider calls.
 
 The standard-library Python server binds explicitly to loopback. The native declaration
 uses `llp-web-help`, candidate port 8501, runtime `python3.12`, and
-`help.web.llmpsych.1puni.com`. Port 8500 remains assigned to the static landing.
+`help.llmpsych.com`, with the same URL passed as `--origin`. Port 8500 remains assigned to the static landing.
 These are the only two declarations in landing. Source scope comes from
 knowledge-ingestion handoff commit `0ee5b35be38b80136c85aba80815e69bf8240d09`,
 `steward/sites/README.md`. Installation and target readiness were observed for the revisions in the dated
@@ -140,11 +140,16 @@ at process startup. A source checkout reports `development`. Health separates
 Its response contains only `sha` and `inference_configured`. Live acceptance is dated
 evidence recorded separately, not a boolean inferred from configuration or one call.
 
-The working custom name `help.llmpsych.com` requires an operator-approved exact-host
-policy change preserving the existing suffix, domain/DNS authority, certificate and
-SNI routing. A CNAME alone is insufficient. Do not change apex/www Pages, install a
-new host, or provision DNS from this task. The supported preview is operational;
-custom-host cutover is separate and does not block inference.
+The operator authorized the `help.llmpsych.com` cutover on 5 October 2026.
+The controller must retain `web.llmpsych.1puni.com` as the landing namespace, grant
+the exact custom hostname through `allowed_hostnames`, include `llmpsych.com` in
+its allowed zones, and have Cloudflare Zone Read / DNS Edit access to that zone.
+The existing target then provisions the A record, certificate and SNI routing.
+The app's browser origin changes with its hostname; the old preview can redirect
+to the new URL. Apex/www Pages retain their existing owner and deployment.
+Registrar-transfer completion is not a DNS prerequisite. Verify public DNS,
+certificate-checked HTTPS, exact-revision health and an allowed-origin request
+after deployment before reporting the cutover complete.
 
 ## Live acceptance: 5 October 2026
 
