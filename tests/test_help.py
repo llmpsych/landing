@@ -111,12 +111,15 @@ class HelpTests(unittest.TestCase):
         self.assertEqual(self.turn(token, 0, 'message')[0], 200)
 
     def test_missing_runtime_health_and_create(self):
+        status, health = self.request('/healthz')
+        self.assertEqual(status, 200)
+        self.assertEqual(health, {'sha': 'a' * 40, 'inference_configured': True})
+        self.assertEqual(self.fixture.actions, [])
         self.stop()
         self.start({})
         status, health = self.request('/healthz')
         self.assertEqual(status, 200)
-        self.assertEqual(health['sha'], 'a' * 40)
-        self.assertFalse(health['inference_configured'])
+        self.assertEqual(health, {'sha': 'a' * 40, 'inference_configured': False})
         self.assertEqual(self.request('/api/sessions', 'POST', INTAKE, CONFIG['pilot_code'])[0], 503)
         with self.service.connect() as db:
             self.assertEqual(db.execute('SELECT count(*) FROM sessions').fetchone()[0], 0)

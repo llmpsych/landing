@@ -288,8 +288,7 @@ class Handler(BaseHTTPRequestHandler):
             service = self.server.service
             if self.command == 'GET':
                 if self.path == '/healthz':
-                    return self.reply(200, {'sha': service.sha, 'inference_configured': service.ready(),
-                                            'live_inference_verified': False})
+                    return self.reply(200, {'sha': service.sha, 'inference_configured': service.ready()})
                 if self.path == '/api/session':
                     return self.reply(200, {'session': service.read(self.token())})
                 assets = {'/': ('index.html', 'text/html; charset=utf-8'),

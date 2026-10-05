@@ -36,8 +36,10 @@ The `main` branch also deploys to https://web.llmpsych.1puni.com/ through the LL
 
 The separate agent-first service, API contract, privacy boundaries, local checks and
 five-minute demo script are documented in [docs/agent-help.md](docs/agent-help.md).
-Its native declaration targets `help.web.llmpsych.1puni.com`; live model access and
-controller deployment evidence must be established before advertising it as live.
+The preview at https://help.web.llmpsych.1puni.com/ completed live native bootstrap
+and app acceptance on 5 October 2026. The [dated acceptance record](docs/agent-help.md#live-acceptance-5-october-2026)
+names the exact tested revisions, receipt provenance and limits; later revisions
+require their own controller deployment verification.
 
 ## Mandatory offline publication gate
 

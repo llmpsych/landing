@@ -89,8 +89,8 @@ uses `llp-web-help`, candidate port 8501, runtime `python3.12`, and
 `help.web.llmpsych.1puni.com`. Port 8500 remains assigned to the static landing.
 These are the only two declarations in landing. Source scope comes from
 knowledge-ingestion handoff commit `0ee5b35be38b80136c85aba80815e69bf8240d09`,
-`steward/sites/README.md`. Protected installed policy/port availability and controller
-receipts still need confirmation; this source does not reserve a port.
+`steward/sites/README.md`. Installation and target readiness were observed for the revisions in the dated
+acceptance record below; this source declaration alone does not reserve a port.
 
 Native `SITE_STATE` is `/var/lib/llmpsych-sites/llp-web-help`. A private,
 non-symlink `runtime.json` selects exactly one mode. The authorized bootstrap uses:
@@ -129,19 +129,69 @@ The earlier protected API-file proposal lives in private knowledge-ingestion
 `f4a3ab3cca6d4424cac43914aefdca40841314b9`; acceptance preparation was reconciled at
 `2dbd290019369b822312f0e5cf91c87c57bf998d` against the previous conversational
 reader. Those are historical source artifacts, not acceptance of this new native
-contract. The runtime owner must supply matching installation evidence and a
-permitted private pilot-code path before live acceptance. Never commit runtime
-inputs or put credentials in argv. Tests use only local synthetic Unix fixtures.
+contract. Matching native installation and live acceptance evidence is recorded
+below. Future live checks require authorized private pilot-code access. Never commit
+runtime inputs or put credentials in argv. Repository tests use only local synthetic Unix fixtures.
 
 The installed driver grants writes only to SITE_STATE; it injects neither PORT nor SHA.
 `/healthz` captures the full SHA once from the resolved immutable release directory
 at process startup. A source checkout reports `development`. Health separates
 `inference_configured` from any live journey claim; it never performs paid inference.
+Its response contains only `sha` and `inference_configured`. Live acceptance is dated
+evidence recorded separately, not a boolean inferred from configuration or one call.
 
 The working custom name `help.llmpsych.com` requires an operator-approved exact-host
 policy change preserving the existing suffix, domain/DNS authority, certificate and
 SNI routing. A CNAME alone is insufficient. Do not change apex/www Pages, install a
-new host, or provision DNS from this task. Establish the supported fallback first.
+new host, or provision DNS from this task. The supported preview is operational;
+custom-host cutover is separate and does not block inference.
+
+## Live acceptance: 5 October 2026
+
+Stewardship completed the authorized live native bootstrap with Codex assistance
+on the existing GG VPS, using existing provider binaries and authentication without
+new accounts. The existing private pilot remains in place.
+
+The tested app revision was `a825deeebebacd519d3738df6ed30d3cd7f7fb29`
+(source task `task-76e6445f7c075b70925bb7fe9f1348d3`). The installed bridge/harness
+revision was `8287213c2f6d45e1d0ae9d1fa3e1427cafcf59a5`
+(bridge task `task-b252ce038e15536f8cf062def7c2087c`), published after its normal
+full publication gate. GG remained at `ec13ceaa4de5accd0966f649c07733788937a275`.
+
+Provenance: the controller's sanitized `app-acceptance.json`,
+`fallback-acceptance.json` and `installed-acceptance.json` receipts in the
+`bootstrap-inference-acceptance-20261005` evidence bundle were independently read
+for follow-up task `task-86d755448c3a5844b7a249c3874e9070`. These are externally
+observed receipts, not outputs of the repository's synthetic tests.
+
+- `fallback-acceptance.json` (16:52:16 UTC): real native Codex `gpt-6-astra`,
+  Claude `claude-sonnet-5` and GLM `glm-5.3` each returned HTTP 200 with a valid
+  reply. Earlier adapters were made synthetically unavailable in a separate
+  acceptance process to exercise fallback; production provider configuration
+  was unchanged.
+- `app-acceptance.json` (16:54:42 UTC): the published app checker passed with
+  13 real native replies covering twelve-exchange completion, early finish,
+  two-session isolation, stale retries, unauthorized-session rejection,
+  controlled app restart and persistence, and deletion of both synthetic sessions.
+  The restart observation at 16:52:37 UTC retained the exact tested app SHA.
+- `installed-acceptance.json` (16:54:58 UTC): `landing-sites` was ready at that
+  exact app revision, with both `llp-web-help` and `llp-web-landing` serving.
+  The socket was owned by root and the site group (GID 970), mode 0660;
+  an unrelated UID was denied, the site UID could not read provider credentials,
+  and zero ephemeral native request homes remained.
+
+An independent public HTTPS `/healthz` read during this follow-up also returned
+that exact app SHA and `inference_configured: true`. The accepted app's additional
+`live_inference_verified: false` was a hardcoded source constant, not a failed
+acceptance result. This follow-up removes that misleading field rather than
+replacing it with a hardcoded success claim.
+
+These observations establish live acceptance of the named installed revisions.
+They do not verify later source changes or deployment of this follow-up; the
+controller must verify successor deployment after normal gates and publication.
+No additional provider calls or duplicate live E2E are needed for this status-only
+change. Provider-side retention remains governed by the existing accounts; local
+cleanup and deletion do not establish provider erasure or clinical benefit.
 
 ## Run and verify
 
