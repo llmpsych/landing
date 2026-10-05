@@ -391,3 +391,44 @@ providers. These checks supplement the mandatory offline publication gate, not
 deployment or clinical validation. Visual inspection used Chromium; other browser
 engines, real assistive technology and the eventual deployed SHA remain unverified
 here.
+
+
+## Content visibility review and controller correction (5 October 2026)
+
+The Codex/controller follow-up initially inferred a user preference for the earlier
+purple/sans direction. Controller steering `clarify-help-content-20261005`
+withdrew that inference before publication: the reported concern was that there
+had been more on the page. Neither purple nor a typography rollback is an
+established user preference. Preserve the existing sage/serif visual identity
+unless a subsequent brief explicitly changes it. This correction supersedes any
+claim that the earlier identity must be restored; it does not attribute the
+controller-authored brief to the user.
+
+Source comparison found the following concrete content changes:
+
+| Revision | Content and capability changes |
+| --- | --- |
+| `2f094cc` original pilot | Three intake fields, describe/reflect/experiment/review route, experiment controls and a synthetic intake example. This workflow was deliberately retired by the conversational v2 change, before either design pass; old records remain read-only/deletable. Restoring it would change the current service contract. |
+| `ab7b2d5`, then `a825dee` before design passes | Relational-care introduction, no-diagnosis-or-plan invitation, full exchange-count explanation, and an always-visible four-part written dialogue. Pilot entry and resume already used disclosure controls. `a825dee` updated processing disclosures for native providers. |
+| `9c8f674` first design pass | Same four dialogue paragraphs, but collapsed by default behind “Read a written example.” Shorter introduction and exchange explanation; secondary intro paragraphs hidden on phones. The opening question, pilot, consent, resume/key/delete/end controls and 12-exchange limit remained. API navigation and waiting/error/focus handling improved. |
+| `85e827e` later pass | Same written example and conversation controls. Detailed provider, fallback, storage, admin-access and deletion disclosures moved into linked `/safety`; consent became brief with accurate seven-day expiry wording. Typography and colours changed. |
+| `3e610eb` domain cutover | No web asset changes. Public HTTPS reads during this review matched this source byte-for-byte for the home page, CSS, JS, API and safety documents. Health reported this exact revision. |
+
+The substantiated visibility reduction addressed here is the written example:
+it starts expanded again, retaining the current typography, copy, explicit
+“not live replies” label and ability to collapse it. This restores useful
+explanatory content without inventing new material or reinstating retired intake
+and experiment features. The brief consent and separate safety document remain;
+there is no reason to put their full disclosures back on the entry page.
+Which earlier revision the user remembers is unknown. The content comparison
+does not prove that this example was the particular missing element they meant.
+
+Evidence is retained outside source under `/tmp/help-content-8d2ec9/`: public
+asset hashes and exact health response, final synthetic browser captures at
+1272px, 390px and 320px, browser and offline gate logs. Earlier reference renders
+remain at `/tmp/help-design-dc33166/` and `/tmp/help-design-claude-20261005/`.
+The unpublished cosmetic experiment under `/tmp/help-restore-8d2ec9/` was
+withdrawn after the correction and is not the final product direction.
+Publication and exact-successor deployment remain controller-owned; public reads
+of `3e610eb` establish the pre-change deployment only. No private sessions or
+providers were accessed for this review.
