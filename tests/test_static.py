@@ -51,7 +51,7 @@ class StaticTests(unittest.TestCase):
             self.assertIn(name, documents['index.html'].links, 'Product missing from homepage')
 
     def test_help_page_assets_and_routes(self):
-        routes = {'/': 'index.html', '/api-docs': 'api.html', '/app.js': 'app.js', '/style.css': 'style.css'}
+        routes = {'/': 'index.html', '/api-docs': 'api.html', '/safety': 'safety.html', '/app.js': 'app.js', '/style.css': 'style.css'}
         web = ROOT / 'help_service' / 'web'
         for filename in ('index.html', 'api.html'):
             document = Document(web / filename)

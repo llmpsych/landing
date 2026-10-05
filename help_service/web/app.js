@@ -36,8 +36,11 @@ async function run(work, status = 'Updating conversation…', focusAfter = null)
     }
   }
 }
-function bubble(who, text) {
-  const div = document.createElement('div'); div.className = 'bubble' + (who === 'You' ? ' participant' : '');
+function bubble(who, text, tag) {
+  const div = document.createElement('div');
+  const dataVoice = who.startsWith('Earlier');
+  div.className = 'bubble' + (who === 'You' ? ' participant agent-voice' : dataVoice ? ' agent-voice' : '');
+  if (tag) { const t = document.createElement('p'); t.className = 'bubble-tag'; t.textContent = tag; div.append(t); }
   const label = document.createElement('span'); label.className = 'speaker'; label.textContent = who;
   const p = document.createElement('p'); p.textContent = text; div.append(label, p); $('turns').append(div);
 }
@@ -46,11 +49,16 @@ function render() {
   $('onboarding').hidden = true; $('conversation').hidden = false;
   const legacy = session.schema_version !== 2 || session.consent_version !== '2026-10-05-native-providers';
   const ended = legacy || session.phase === 'complete';
-  $('phase').textContent = legacy ? 'Earlier session · read-only' : `${session.version} of ${session.max_exchanges} exchanges · ${ended ? 'ended' : 'you can pause or finish sooner'}`;
+  $('phase').replaceChildren();
+  const count = document.createElement('span'); count.className = 'count';
+  count.textContent = legacy ? 'Earlier session' : `${session.version} of ${session.max_exchanges} exchanges`;
+  const status = document.createElement('span'); status.className = 'status';
+  status.textContent = legacy ? 'Read-only' : (ended ? 'Ended' : 'You can pause or finish sooner');
+  $('phase').append(count, status);
   $('session-key').value = token;
   $('turns').replaceChildren();
   if (session.intake) bubble('Earlier context', JSON.stringify(session.intake, null, 2));
-  else bubble('Help · opening question', session.opening);
+  else bubble('Help', session.opening, 'Opening question');
   for (const turn of session.turns) { bubble('You', turn.input); bubble('Help', turn.reply); }
   if (legacy && session.experiment) bubble('Earlier proposal', JSON.stringify(session.experiment, null, 2));
   $('legacy').hidden = !legacy;

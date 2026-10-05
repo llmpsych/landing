@@ -22,7 +22,7 @@ const assert = require('node:assert/strict');
       const rgb = hex.match(/\w\w/g).map(v => parseInt(v,16)/255).map(v => v <= .04045 ? v/12.92 : ((v+.055)/1.055)**2.4);
       return rgb[0]*.2126 + rgb[1]*.7152 + rgb[2]*.0722;
     };
-    for (const [foreground,background] of [['242c48','ffffff'],['59637a','f3f5fa'],['50478b','e9e7f4'],['ffffff','242c48'],['912f43','fff0f2'],['835c13','ffffff']]) {
+    for (const [foreground,background] of [['1c2420','ffffff'],['5c6a62','eef1ea'],['2c4d3c','eef1ea'],['ffffff','1c2420'],['8a2f3f','fbeaec'],['8a5a2b','ffffff']]) {
       const values = [luminance(foreground),luminance(background)].sort((a,b) => b-a);
       assert((values[0]+.05)/(values[1]+.05) >= 4.5, 'Token contrast: ' + foreground);
     }
@@ -32,6 +32,9 @@ const assert = require('node:assert/strict');
     if (process.env.HELP_SCREENSHOT) await page.screenshot({path:process.env.HELP_SCREENSHOT + '-desktop.png',fullPage:true});
     await page.locator('#admission > summary').click();
     await shot('consent-' + page.viewportSize().width);
+    const consentText = await page.locator('.privacy').innerText();
+    assert.doesNotMatch(consentText, /OpenAI|Anthropic|Z\.AI|forensic/i, 'Consent notice stays brief; detail lives on the safety page');
+    await page.locator('.privacy a[href="/safety"]').waitFor();
     await page.locator('#pilot').fill('synthetic-pilot-code-at-least-24');
     await page.locator('#consent').check();
     await page.locator('#admission-form button').click();
@@ -127,6 +130,13 @@ const assert = require('node:assert/strict');
     if (process.env.HELP_SCREENSHOT) await page.screenshot({path:process.env.HELP_SCREENSHOT + '-api-mobile-viewport.png'});
     await page.setViewportSize({width:1272,height:846});
     await shot('api-desktop');
+    await page.locator('a[href="/safety"]').first().click();
+    await page.locator('h1').filter({hasText:'Safety'}).waitFor();
+    await shot('safety-desktop');
+    const safetyText = await page.locator('main').innerText();
+    assert.match(safetyText, /OpenAI|Anthropic|Z\.AI/, 'Safety page carries the full provider disclosure');
+    await page.locator('a[href="/"]').last().click();
+    await page.locator('#runtime').filter({hasText:'Private pilot'}).waitFor();
     await page.goto(url);
     await page.route('**/api/session', route => route.fulfill({contentType:'application/json',body:JSON.stringify({session:{schema_version:1,consent_version:'old',version:0,max_exchanges:12,phase:'conversation',intake:{context:'Synthetic earlier context'},turns:[],expires_at:1791800000}})}));
     await page.locator('#resume-panel summary').click();

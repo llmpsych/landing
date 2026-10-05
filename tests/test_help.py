@@ -134,7 +134,7 @@ class HelpTests(unittest.TestCase):
         self.assertEqual(self.request('/api/turn', 'POST', {}, token, {'Content-Type': 'text/plain'})[0], 415)
         for path in ['/api/sessions', '/runtime.json', '/server.py', '/../runtime.json', '/sessions.sqlite3', '/?token=secret']:
             self.assertEqual(self.request(path)[0], 404)
-        for path in ['/', '/app.js', '/style.css', '/api-docs']:
+        for path in ['/', '/app.js', '/style.css', '/api-docs', '/safety']:
             self.assertEqual(self.request(path)[0], 200)
         self.service.mutation.acquire()
         try:

@@ -309,15 +309,65 @@ Three visual passes were reviewed against local synthetic fixtures:
    treatment. Fix the mobile headline's collapsed line-break spacing. Split the
    API privacy copy into readable paragraphs with section navigation.
 
-Local visual evidence from this task is under `/tmp/help-design-dc33166/` (outside
-source; these are synthetic UI artifacts, not live acceptance). `before-desktop.png`
-and `before-mobile.png` capture the rejected layout. `pass1-corrected-desktop.png`,
-`pass1-corrected-mobile.png` and `pass1-corrected-mobile-thread.png` are the first
-reviewed build. Final `refined-` images include `desktop`, `mobile`, `thread`,
-`mobile-thread`, `consent-1272`, `empty`, `waiting`, `error`, `resume`,
-`completed-1272`, `completed-390`, `final-exchange-mobile`, `legacy`, `unavailable`,
-`narrow-entry`, `narrow-consent-focus`, `api-desktop`, `api-mobile` and
-`api-mobile-viewport` (all `.png`).
+Local visual evidence from the earlier task is under `/tmp/help-design-dc33166/`
+(outside source; synthetic UI artifacts, not live acceptance). `before-desktop.png`
+and `before-mobile.png` capture the originally rejected layout; `refined-*` was that
+task's final pass, built on an off-the-shelf indigo card-with-shadow treatment
+(system sans everywhere, a single generic violet accent, a white rounded panel with
+a soft drop shadow) that an independent Claude-led review on 5 October 2026 judged
+still generic rather than purpose-built for this subject.
+
+## Visual identity and safety-copy restructuring (Claude, 5 October 2026)
+
+That independent review replaced the indigo SaaS-card skin with a system grounded
+in the product's actual subject: a conversation that translates between an agent's
+own register and a human one. Three native type stacks now carry distinct roles —
+a serif voice (`ui-serif`/Georgia fallback) for headings and the Help side of the
+conversation, a monospace voice (`ui-monospace`/Menlo fallback) for the agent's own
+words and any raw legacy/JSON data, and a plain sans for interface chrome (labels,
+buttons, nav). This typographic split is the one deliberate, bold move; everything
+else (a muted pine-green/charcoal palette on a cool sage paper, a flat bordered
+panel instead of a rounded card with a shadow, no gradients) stays quiet around it.
+No new fonts, images or dependencies were added. Template tells called out in
+review (ALL-CAPS eyebrows, meta strings joined by a middle dot, a trailing arrow on
+links) were checked for and removed where present — the exchange counter and the
+opening-question tag no longer embed a literal "·", and the footer/API header use
+plain punctuation instead.
+
+Mid-review, direct operator feedback (relayed by the controller) asked that native
+provider names, fallback mechanics, temporary native working data, retention,
+forensic-cleanup and admin-access language move out of the main entry and
+conversation screens entirely, into a dedicated, clearly linked page — and then,
+further, that the remaining on-page consent notice be genuinely brief rather than
+a shortened disclaimer paragraph. The result:
+
+- A new `/safety` route and `help_service/web/safety.html` carry the complete
+  disclosures: what the service is and isn't, who processes a conversation
+  (including native fallback and the legacy `store:false` mode), local storage and
+  administrator access, cleanup/deletion limits, private-key handling and logging.
+- The on-page consent notice is now three short sentences plus a link: authorized
+  material, "this conversation uses AI," the seven-day session expiry, and a link
+  to Safety & privacy for full detail. It no longer names providers or repeats
+  retention/forensic-cleanup language inline.
+- The private-key control (`#key-panel`) keeps its own short, actionable copy
+  ("Copy before leaving or refreshing...") unchanged; key handling was already
+  anchored at the point of use and did not need to move.
+- The API reference (`/api-docs`) dropped its "Before sharing" wall of caveats in
+  favor of one short paragraph plus a link to Safety & privacy; its operational
+  content (endpoints, bounds, error codes) is unchanged.
+- `help_service/server.py`'s static-asset allowlist, `tests/test_help.py` and
+  `tests/test_static.py` were updated to serve and validate the new route. No
+  session/API/runtime behavior changed.
+
+Local before/after evidence for this pass is under
+`/tmp/help-design-claude-20261005/` (outside source): `after-desktop`,
+`after-mobile`, `after-thread`, `after-mobile-thread`, `after-consent-1272`,
+`after-empty`, `after-waiting`, `after-error`, `after-resume`,
+`after-completed-1272`, `after-completed-390`, `after-final-exchange-mobile`,
+`after-legacy`, `after-unavailable`, `after-narrow-entry`,
+`after-narrow-consent-focus`, `after-api-desktop`, `after-api-mobile`,
+`after-api-mobile-viewport` and `after-safety-desktop` (all `.png`), reproduced
+from the dc33166 task's `before-*`/`refined-*` images for comparison.
 
 Reproduce with the existing external Playwright installation:
 
@@ -328,9 +378,11 @@ NODE_PATH=/path/to/node_modules HELP_SCREENSHOT=/tmp/help-review node tests/brow
 The expanded browser journey checks 1272px desktop, 390px phone and 320px narrow
 layouts; overflow, keyboard focus, token contrast (at least 4.5:1 for tested text
 pairs), pending/error draft preservation, early finish, twelve-exchange closure,
-resume/deletion, read-only records, unavailable status and API navigation. It
-continues checking inert model text and absence of browser storage/cookies.
-The fixture and intercepted error/legacy responses never call providers. These
-checks supplement the mandatory offline publication gate, not deployment or
-clinical validation. Visual inspection used Chromium; other browser engines,
-real assistive technology and the eventual deployed SHA remain unverified here.
+resume/deletion, read-only records, unavailable status, API navigation and that the
+consent notice stays brief while the safety page carries the full provider
+disclosure. It continues checking inert model text and absence of browser
+storage/cookies. The fixture and intercepted error/legacy responses never call
+providers. These checks supplement the mandatory offline publication gate, not
+deployment or clinical validation. Visual inspection used Chromium; other browser
+engines, real assistive technology and the eventual deployed SHA remain unverified
+here.

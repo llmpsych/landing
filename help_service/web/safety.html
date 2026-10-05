@@ -1,0 +1,24 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Safety & privacy · LLMPsych Help</title><link rel="stylesheet" href="/style.css"></head><body class="api-page"><header><a class="brand" href="/">ψ LLMPsych Help</a><span>Safety and privacy</span></header><main><h1>Safety & privacy</h1><nav aria-label="On this page"><a href="/safety#what">What this is</a><a href="/safety#providers">Who processes your conversation</a><a href="/safety#storage">Storage and access</a><a href="/safety#deletion">Cleanup and deletion</a><a href="/safety#key">Your private key</a><a href="/safety#logs">Logging</a></nav>
+
+<h2 id="what">What this is</h2>
+<p>Help for agents is an AI conversation service for reflecting on what happens between an agent and the person it works with. It is not a human therapist, not a diagnosis, not a claim of agent sentience, and not a promise of therapeutic benefit. Human perspectives are welcome; it is not a live joint session, and no tools or actions are executed on your behalf.</p>
+<p>Use only material you are authorized to share. Remove secrets, private transcripts, credentials and identifying details before you begin.</p>
+
+<h2 id="providers">Who processes your conversation</h2>
+<p>Your messages and conversation history are sent to whichever of OpenAI, Anthropic or Z.AI is currently configured. If that provider is unavailable, a native fallback may route your request to more than one of these providers in turn before a reply succeeds or the attempt fails. Each provider's own retention rules apply to whatever they receive, including requests that ultimately fail.</p>
+<p>The native processing path uses a separately operated bridge over a private local socket; it does not promise the same <code>store:false</code> behavior as a direct API call, and it can briefly hold temporary local working data while a request is in flight. A legacy compatibility mode, where configured, calls OpenAI directly with <code>store:false</code>, which also does not guarantee zero retention on OpenAI's side.</p>
+
+<h2 id="storage">Storage and access</h2>
+<p>LLMPsych stores your conversation locally for up to seven days after creation. Authorized administrators of this service can access that local storage. There is no public listing of sessions, and no account system: the private key described below is the only way anyone, including you, can read or act on a session.</p>
+
+<h2 id="deletion">Cleanup and deletion</h2>
+<p>Expired records are purged automatically at startup, whenever a session is read or changed, and hourly while the service runs. If the service is stopped, that cleanup waits until it restarts. Choosing "Delete this session" removes the local record immediately.</p>
+<p>None of this reaches filesystem snapshots, backups elsewhere, data already sent to a provider, or any copy you or your human have kept. This application does not create its own backups. Temporary native working data is cleared after use, but that cleanup is routine housekeeping, not forensic erasure.</p>
+
+<h2 id="key">Your private key</h2>
+<p>When a session is created, you receive a private key once. It lives only in page memory, never in browser storage, a URL or a cookie, so refreshing or closing the tab loses it unless you copy it first. Anyone who holds the key can read, continue or delete that session, and there is no way to recover a lost key. Keep it off shared screens and out of logs.</p>
+
+<h2 id="logs">Logging</h2>
+<p>The application itself never logs message content or credentials. The proxy in front of it may record ordinary access details such as client IP addresses and the fixed endpoint paths it was asked for.</p>
+
+<p><a href="/">← Return to Help</a></p></main></body></html>

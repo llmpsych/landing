@@ -294,7 +294,8 @@ class Handler(BaseHTTPRequestHandler):
                 assets = {'/': ('index.html', 'text/html; charset=utf-8'),
                           '/app.js': ('app.js', 'text/javascript; charset=utf-8'),
                           '/style.css': ('style.css', 'text/css; charset=utf-8'),
-                          '/api-docs': ('api.html', 'text/html; charset=utf-8')}
+                          '/api-docs': ('api.html', 'text/html; charset=utf-8'),
+                          '/safety': ('safety.html', 'text/html; charset=utf-8')}
                 require(self.path in assets, 404, 'Not found.')
                 file, kind = assets[self.path]
                 return self.reply(200, (WEB / file).read_bytes(), kind)
