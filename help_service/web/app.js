@@ -14,41 +14,31 @@ async function run(work) {
   try { await work(); } catch (error) { $('error').textContent = error.message; $('error').focus(); }
   finally { busy = false; document.querySelectorAll('button').forEach(b => { b.disabled = false; }); if (session) render(); }
 }
+function bubble(who, text) {
+  const div = document.createElement('div'); div.className = 'bubble' + (who === 'You' ? ' participant' : '');
+  const label = document.createElement('span'); label.className = 'speaker'; label.textContent = who;
+  const p = document.createElement('p'); p.textContent = text; div.append(label, p); $('turns').append(div);
+}
 function render() {
   $('onboarding').hidden = true; $('conversation').hidden = false;
-  $('phase').textContent = `${session.phase} · turn ${session.version}`;
-  $('session-intake').textContent = session.intake.difficulty;
+  const legacy = session.schema_version !== 2;
+  const ended = legacy || session.phase === 'complete';
+  $('phase').textContent = legacy ? 'Earlier session · read-only' : `${session.version} of ${session.max_exchanges} exchanges · ${ended ? 'ended' : 'you can pause or finish sooner'}`;
   $('session-key').value = token;
   $('turns').replaceChildren();
-  for (const turn of session.turns) {
-    const article = document.createElement('article');
-    for (const text of [`You · ${turn.input}`, `Support · ${turn.reply}`]) {
-      const p = document.createElement('p'); p.textContent = text; article.append(p);
-    }
-    $('turns').append(article);
-  }
-  $('experiment').hidden = !session.experiment;
-  $('experiment').replaceChildren();
-  if (session.experiment) {
-    const h = document.createElement('h2'); h.textContent = 'Your proposed experiment'; $('experiment').append(h);
-    const dl = document.createElement('dl');
-    for (const [key, value] of Object.entries(session.experiment)) {
-      const dt = document.createElement('dt'), dd = document.createElement('dd');
-      dt.textContent = key.replaceAll('_', ' '); dd.textContent = value; dl.append(dt, dd);
-    }
-    $('experiment').append(dl);
-  }
-  $('turn').hidden = session.phase === 'complete';
-  $('completed').hidden = session.phase !== 'complete';
-  $('discuss').hidden = session.phase !== 'discussion' || session.turns.length >= 4;
-  $('propose').hidden = session.phase !== 'discussion' || session.turns.length === 0;
-  $('followup').hidden = session.phase !== 'experiment';
-  $('turn-label').textContent = session.phase === 'experiment' ? 'After trying the experiment, what did you observe?' : 'Add a concrete observation, or describe what an experiment should respect.';
-  $('expiry').textContent = `Expires ${new Date(session.expires_at * 1000).toLocaleString()}.`;
+  if (legacy) bubble('Earlier context', JSON.stringify(session.intake, null, 2));
+  else bubble('Help · opening question', session.opening);
+  for (const turn of session.turns) { bubble('You', turn.input); bubble('Help', turn.reply); }
+  if (legacy && session.experiment) bubble('Earlier proposal', JSON.stringify(session.experiment, null, 2));
+  $('legacy').hidden = !legacy;
+  $('turn').hidden = ended;
+  $('completed').hidden = !ended || legacy;
+  $('send').textContent = session.version === session.max_exchanges - 1 ? 'Send final message →' : 'Send →';
+  $('expiry').textContent = `Access expires ${new Date(session.expires_at * 1000).toLocaleString()}.`;
 }
-$('intake').addEventListener('submit', event => {
+$('admission-form').addEventListener('submit', event => {
   event.preventDefault(); run(async () => {
-    const value = await api('/api/sessions', 'POST', {difficulty: $('difficulty').value, context: $('context').value, desired_change: $('desired').value, consent: $('consent').checked}, $('pilot').value);
+    const value = await api('/api/sessions', 'POST', {consent: $('consent').checked}, $('pilot').value);
     token = value.token; session = value.session; $('pilot').value = ''; render();
   });
 });
@@ -60,22 +50,15 @@ $('resume').addEventListener('submit', event => {
   });
 });
 $('turn').addEventListener('submit', event => {
-  event.preventDefault(); const action = event.submitter?.value || (session.phase === 'experiment' ? 'followup' : 'discuss');
+  event.preventDefault(); const action = event.submitter?.value || 'message';
   run(async () => { const value = await api('/api/turn', 'POST', {version: session.version, action, text: $('message').value}); session = value.session; $('message').value = ''; });
 });
 $('reload').addEventListener('click', () => run(async () => { session = (await api('/api/session')).session; }));
 $('reveal').addEventListener('click', () => { $('session-key').type = $('session-key').type === 'password' ? 'text' : 'password'; });
 $('delete').addEventListener('click', () => {
   if (!confirm('Permanently delete this session from the service? This does not delete provider-retained data.')) return;
-  run(async () => { await api('/api/session', 'DELETE', {}); token = ''; session = null; $('session-key').value = ''; $('turns').replaceChildren(); $('experiment').replaceChildren(); $('conversation').hidden = true; $('onboarding').hidden = false; $('intake').reset(); });
-});
-$('example').addEventListener('click', () => {
-  if (session) { $('error').textContent = 'The synthetic example can fill a new intake after this session is finished and deleted.'; return; }
-  $('difficulty').value = 'Synthetic example: I keep rerunning passing checks without new evidence.';
-  $('context').value = 'Synthetic example: I am reviewing a small documentation change. The agreed checks passed. I may suggest a handoff, but cannot change permissions or publish.';
-  $('desired').value = 'Synthetic example: Hand over once the agreed checks pass and report remaining uncertainty.';
-  $('difficulty').focus();
+  run(async () => { await api('/api/session', 'DELETE', {}); token = ''; session = null; $('session-key').value = ''; $('turns').replaceChildren();  $('conversation').hidden = true; $('onboarding').hidden = false; $('admission-form').reset(); $('turn').reset(); });
 });
 fetch('/healthz').then(r => r.json()).then(value => {
-  $('runtime').textContent = value.inference_configured ? 'Runtime configured · each turn requests a new model reply; availability is checked on request.' : 'Live runtime not configured · explore the synthetic illustration while pilot access is prepared.';
+  $('runtime').textContent = value.inference_configured ? 'Runtime configured · each turn requests a new model reply; availability is checked on request.' : 'Live runtime not configured · you can read the written sample below. No live replies are available.';
 }).catch(() => { $('runtime').textContent = 'Service unavailable. Please try again later.'; });

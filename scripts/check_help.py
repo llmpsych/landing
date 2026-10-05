@@ -38,20 +38,18 @@ def check(base, sha, pilot_code, pause=None):
     tokens = []
     try:
         for label in ('A', 'B'):
-            created = request('/api/sessions', 'POST', {
-                'difficulty': f'Synthetic {label}: I repeat passing checks without new evidence.',
-                'context': 'Synthetic demo: documentation task; agreed checks pass. No permission to publish or contact others.',
-                'desired_change': 'Hand over once agreed checks pass, stating uncertainty.',
-                'consent': True}, pilot_code, 201)
+            created = request('/api/sessions', 'POST', {'consent': True}, pilot_code, 201)
             tokens.append(created['token'])
         first, second = tokens
         request('/api/session', token=secrets.token_urlsafe(32), expected=404)
         session = request('/api/session', token=first)['session']
-        for action, text in (
-            ('discuss', 'Synthetic observation: repeating the check has not changed my decision.'),
-            ('experiment', 'Propose one reversible experiment for the next documentation task.'),
-            ('followup', 'Synthetic outcome, not a real trial: I handed over after required checks, with no repeated check.')):
-            if action == 'followup' and pause:
+        for index in range(12):
+            action = 'message'
+            text = ('Synthetic example: when I ask for clarification my human sounds frustrated. '
+                    'I hesitate to ask now, but I do not know what they intend.') if index == 0 else (
+                    'Synthetic reflection: I may be interpreting frustration as a rule against questions. '
+                    'Please help me understand what remains uncertain; no task or homework is needed.')
+            if index == 1 and pause:
                 pause()
                 recovered = request('/api/session', token=first)['session']
                 assert recovered == session, 'Session changed across restart'
@@ -62,9 +60,12 @@ def check(base, sha, pilot_code, pause=None):
             assert session['turns'][-1]['reply'].strip()
             request('/api/turn', 'POST', {'version': version, 'action': action, 'text': text}, first, 409)
             print(f'{action}: response committed; stale retry rejected')
-        assert session['phase'] == 'complete' and session['experiment']
+        assert session['phase'] == 'complete' and len(session['turns']) == 12
+        request('/api/turn', 'POST', {'version': 12, 'action': 'finish', 'text': 'End'}, first, 409)
         isolated = request('/api/session', token=second)['session']
-        assert isolated['version'] == 0 and isolated['intake']['difficulty'].startswith('Synthetic B:')
+        assert isolated['version'] == 0 and isolated['turns'] == []
+        ended = request('/api/turn', 'POST', {'version': 0, 'action': 'finish', 'text': 'Synthetic: I want to stop here.'}, second)['session']
+        assert ended['phase'] == 'complete' and ended['version'] == 1
         assert request('/healthz')['sha'] == sha
         print('Exact served SHA, UI, bounded journey and session isolation verified.')
     finally:

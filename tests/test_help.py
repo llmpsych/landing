@@ -14,8 +14,7 @@ from urllib.error import HTTPError
 from help_service.server import Service, Server, Inference, Problem, configuration, release_sha
 
 CONFIG = {'api_key': 'test-only-not-a-credential', 'model': 'test-fixture', 'pilot_code': 'synthetic-pilot-code-at-least-24'}
-INTAKE = {'difficulty': 'Synthetic repeated checks', 'context': 'Synthetic authorized task',
-          'desired_change': 'Synthetic bounded handoff', 'consent': True}
+INTAKE = {'consent': True}
 
 
 class Fixture:
@@ -23,16 +22,14 @@ class Fixture:
     def __init__(self):
         self.calls = []
         self.fail = False
+        self.actions = []
 
     def __call__(self, session, action, text):
+        self.actions.append(action)
         self.calls.append(json.loads(json.dumps(session)))
         if self.fail:
             raise RuntimeError('PRIVATE PROVIDER ERROR MUST NOT LEAK')
         result = {'reply': 'SYNTHETIC FIXTURE: a concrete reflection on ' + text}
-        if action == 'experiment':
-            result.update(change='SYNTHETIC: hand over after agreed checks',
-                          measure='Repeat checks without new evidence',
-                          stop_condition='A required check fails', review_when='After one task')
         return result
 
 
@@ -80,23 +77,20 @@ class HelpTests(unittest.TestCase):
         return self.request('/api/turn', 'POST', {'version': version, 'action': action, 'text': text}, token)
 
     def test_full_journey_isolation_restart_delete(self):
-        token, other = self.create(), self.create(difficulty='OTHER SESSION PRIVATE MARKER')
-        self.assertEqual(self.turn(token, 0, 'experiment')[0], 409)
-        self.assertEqual(self.turn(token, 0, 'discuss')[0], 200)
-        self.assertEqual(self.turn(token, 0, 'discuss')[0], 409)
-        status, result = self.turn(token, 1, 'experiment')
-        self.assertEqual(status, 200)
-        self.assertEqual(set(result['session']['experiment']), {'change', 'measure', 'stop_condition', 'review_when'})
+        token, other = self.create(), self.create()
+        self.assertEqual(self.turn(token, 0, 'message', 'PRIVATE MARKER A')[0], 200)
+        self.assertEqual(self.turn(token, 0, 'message')[0], 409)
         self.stop()
         self.start()
         status, result = self.request('/api/session', token=token)
-        self.assertEqual(result['session']['phase'], 'experiment')
-        status, result = self.turn(token, 2, 'followup')
+        self.assertEqual(result['session']['phase'], 'conversation')
+        status, result = self.turn(token, 1, 'finish')
         self.assertEqual(status, 200)
         self.assertEqual(result['session']['phase'], 'complete')
-        self.assertEqual(self.turn(token, 3, 'discuss')[0], 409)
+        self.assertEqual(self.fixture.actions, ['converse', 'close'])
+        self.assertEqual(self.turn(token, 2, 'message')[0], 409)
         self.assertEqual(self.request('/api/session', token=other)[1]['session']['version'], 0)
-        self.assertNotIn('OTHER SESSION PRIVATE MARKER', json.dumps(self.fixture.calls))
+        self.assertNotIn('PRIVATE MARKER A', json.dumps(self.request('/api/session', token=other)))
         self.assertEqual(self.request('/api/session', token=CONFIG['pilot_code'])[0], 401)
         self.assertEqual(self.request('/api/session', token='z' * 43)[0], 404)
         self.assertEqual(self.request('/api/session', 'DELETE', {}, token)[0], 200)
@@ -109,12 +103,12 @@ class HelpTests(unittest.TestCase):
         self.fixture.fail = True
         stdout, stderr = io.StringIO(), io.StringIO()
         with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
-            status, result = self.turn(token, 0, 'discuss', 'PRIVATE INPUT MARKER')
+            status, result = self.turn(token, 0, 'message', 'PRIVATE INPUT MARKER')
         self.assertEqual(status, 502)
         self.assertNotIn('PRIVATE', json.dumps(result) + stdout.getvalue() + stderr.getvalue())
         self.assertEqual(self.request('/api/session', token=token)[1]['session']['version'], 0)
         self.fixture.fail = False
-        self.assertEqual(self.turn(token, 0, 'discuss')[0], 200)
+        self.assertEqual(self.turn(token, 0, 'message')[0], 200)
 
     def test_missing_runtime_health_and_create(self):
         self.stop()
@@ -130,9 +124,9 @@ class HelpTests(unittest.TestCase):
     def test_input_authority_and_storage_boundaries(self):
         self.assertEqual(self.request('/api/sessions', 'POST', INTAKE, 'wrong')[0], 401)
         self.assertEqual(self.request('/api/sessions', 'POST', {**INTAKE, 'consent': False}, CONFIG['pilot_code'])[0], 400)
-        self.assertEqual(self.request('/api/sessions', 'POST', {**INTAKE, 'difficulty': 'x' * 4001}, CONFIG['pilot_code'])[0], 400)
+        self.assertEqual(self.request('/api/sessions', 'POST', {**INTAKE, 'unexpected': 'x'}, CONFIG['pilot_code'])[0], 400)
         token = self.create()
-        self.assertEqual(self.turn(token, 0, 'discuss', 'x' * 17000)[0], 413)
+        self.assertEqual(self.turn(token, 0, 'message', 'x' * 17000)[0], 413)
         self.assertEqual(self.request('/api/turn', 'POST', {}, token, {'Origin': 'https://evil.example'})[0], 403)
         self.assertEqual(self.request('/api/turn', 'POST', {}, token, {'Content-Type': 'text/plain'})[0], 415)
         for path in ['/api/sessions', '/runtime.json', '/server.py', '/../runtime.json', '/sessions.sqlite3', '/?token=secret']:
@@ -141,7 +135,7 @@ class HelpTests(unittest.TestCase):
             self.assertEqual(self.request(path)[0], 200)
         self.service.mutation.acquire()
         try:
-            self.assertEqual(self.turn(token, 0, 'discuss')[0], 503)
+            self.assertEqual(self.turn(token, 0, 'message')[0], 503)
             self.assertEqual(self.request('/api/session', token=token)[0], 200)
         finally:
             self.service.mutation.release()
@@ -164,15 +158,54 @@ class HelpTests(unittest.TestCase):
     def test_bad_provider_output_and_turn_limits(self):
         token = self.create()
         self.service.inference = lambda *_: {'reply': '', 'shell': 'unauthorized'}
-        self.assertEqual(self.turn(token, 0, 'discuss')[0], 502)
+        self.assertEqual(self.turn(token, 0, 'message')[0], 502)
         self.service.inference = self.fixture
-        for version in range(4):
-            self.assertEqual(self.turn(token, version, 'discuss')[0], 200)
-        self.assertEqual(self.turn(token, 4, 'discuss')[0], 409)
-        self.assertEqual(self.turn(token, 4, 'experiment')[0], 200)
+        for version in range(12):
+            if version == 11:
+                self.fixture.fail = True
+                self.assertEqual(self.turn(token, version, 'message')[0], 502)
+                unchanged = self.service.read(token)
+                self.assertEqual(unchanged['version'], 11)
+                self.assertEqual(unchanged['phase'], 'conversation')
+                self.fixture.fail = False
+            status, result = self.turn(token, version, 'message')
+            self.assertEqual(status, 200)
+            self.assertEqual(len(result['session']['turns']), version + 1)
+        self.assertEqual(result['session']['phase'], 'complete')
+        self.assertEqual(self.fixture.actions[-1], 'close')
+        self.assertEqual(self.turn(token, 12, 'finish')[0], 409)
+        self.assertEqual(len(self.fixture.calls), 13)
+
+    def test_failed_attempt_budget_persists_and_stale_is_free(self):
+        token = self.create()
+        self.fixture.fail = True
+        self.assertEqual(self.turn(token, 0, 'finish')[0], 502)
+        self.assertEqual(self.service.read(token)['turns'], [])
         with self.service.connect() as db:
+            self.assertEqual(db.execute('SELECT calls FROM quota').fetchone()[0], 1)
+        self.stop()
+        self.start()
+        self.fixture.fail = False
+        self.assertEqual(self.turn(token, 0, 'message')[0], 200)
+        self.assertEqual(self.turn(token, 0, 'message')[0], 409)
+        with self.service.connect() as db:
+            self.assertEqual(db.execute('SELECT calls FROM quota').fetchone()[0], 2)
             db.execute('UPDATE quota SET calls=300')
-        self.assertEqual(self.turn(token, 5, 'followup')[0], 429)
+        other = self.create()
+        self.assertEqual(self.turn(other, 0, 'message')[0], 429)
+        self.assertEqual(self.turn(token, 1, 'finish')[0], 429)
+
+    def test_legacy_read_only_and_deletable(self):
+        token = self.create()
+        old = {'version': 2, 'phase': 'experiment', 'intake': {'difficulty': 'old'},
+               'turns': [], 'experiment': {'change': 'old proposal'}}
+        with self.service.connect() as db:
+            db.execute('UPDATE sessions SET body=? WHERE key=?', (json.dumps(old), self.service.key(token)))
+        self.assertEqual(self.service.read(token), old)
+        self.assertEqual(self.turn(token, 2, 'message')[0], 409)
+        self.assertEqual(self.turn(token, 2, 'followup')[0], 409)
+        self.assertEqual(self.service.read(token), old)
+        self.assertEqual(self.request('/api/session', 'DELETE', {}, token)[0], 200)
 
     def test_provider_wire_contract(self):
         captured = []
@@ -187,7 +220,7 @@ class HelpTests(unittest.TestCase):
                 self.timeout = timeout
                 return Response()
         with patch('help_service.server.build_opener', return_value=Opener()):
-            result = Inference(CONFIG)({'intake': INTAKE}, 'discuss', 'Synthetic')
+            result = Inference(CONFIG)({'turns': []}, 'converse', 'Synthetic')
         self.assertEqual(result['reply'], 'synthetic')
         request = captured[0]
         self.assertEqual(request.full_url, 'https://api.openai.com/v1/chat/completions')
@@ -197,6 +230,12 @@ class HelpTests(unittest.TestCase):
         self.assertNotIn(CONFIG['api_key'], request.data.decode())
         self.assertNotIn(CONFIG['pilot_code'], request.data.decode())
         self.assertEqual(payload['max_completion_tokens'], 1800)
+        self.assertEqual(set(payload['response_format']['json_schema']['schema']['properties']), {'reply'})
+        self.assertEqual(json.loads(payload['messages'][1]['content'])['exchanges_remaining_after_reply'], 11)
+        with patch('help_service.server.build_opener', return_value=Opener()):
+            Inference(CONFIG)({'turns': []}, 'close', 'Stop here')
+        closing_payload = json.loads(captured[-1].data)
+        self.assertEqual(json.loads(closing_payload['messages'][1]['content'])['exchanges_remaining_after_reply'], 0)
 
     def test_reproducible_e2e_checker(self):
         from scripts.check_help import check

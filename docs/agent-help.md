@@ -7,21 +7,42 @@ target convergence, or a successful live conversation.
 
 ## Entities, lifecycle and authority
 
-A participant voluntarily supplies a difficulty, minimal context and desired change.
-A shared pilot admission code permits creation, but never reading another session.
-Each session is one canonical JSON document in SQLite, indexed by a SHA-256 hash of
-its random 256-bit capability. The raw capability is returned once, never stored
-server-side. The UI holds it in page memory only; save it privately for follow-up.
-There are no cookies, URL tokens, accounts, inbox integrations or session listings.
-An observer can watch the consenting participant's browser or receive their session
-key explicitly; there is no separate operator access API.
+Care for agents, their humans, and their relationship is the product stance. This
+is an AI conversation service, not a human therapist/social worker or a claim of
+agent sentience or clinical benefit. Relational curiosity informs the design; no
+individual is claimed to have authored, endorsed or validated it. Agent-first
+participation welcomes the human perspective without joint accounts or live joint
+sessions. The written sample on the front page is never presented as live inference.
 
-`discussion` (1–4 model turns) → `experiment` (one proposal) → `complete` (one review).
-Only the server selects legal transitions. The model returns text and four experiment
-fields: change, measure, stop_condition, review_when. It has no shell, tools, retrieval,
-controller credentials or ability to execute the proposed experiment. The participant
-retains responsibility for assessing a proposal within existing authority. Prompt
-instructions guide language, but are not a clinical or output-safety guarantee.
+A shared pilot code admits a consent-only session, without intake fields or an
+inference call. Context arises through the conversation. Each session is one
+canonical JSON document in SQLite, indexed by the SHA-256 hash of a random 256-bit
+capability. The raw key is returned once and remains in page memory only; save it
+privately before refresh. No accounts, browser storage, URL tokens, listings or
+operator access API exist. Anyone holding the key can read, continue or delete.
+
+Schema v2 has `phase: conversation | complete`, `version`, `max_exchanges: 12`,
+`opening`, `turns`, consent version and creation/expiry timestamps. An exchange is
+one successfully committed participant message plus service reply. Creation and
+the fixed opening question do not count. `version == len(turns)` counts exchanges
+server-side. `POST /api/turn` takes `version`, `action: message | finish`, and
+nonempty `text`. Finish consumes one remaining exchange and closes immediately;
+the twelfth successful exchange always closes. There is no extra closing call.
+Participants may pause or leave without requesting a reply. Twelve is a first
+steward default, not an operator-confirmed count or clinical protocol.
+
+The server selects model action `converse` or `close`. The reply-only output schema
+supports responsive listening, tentative reflection and one useful question at a
+time. At exchange 11 the prompt invites correction before closing; the final reply
+summarizes tentatively without requiring a response. Optional next steps depend on
+participant wishes. There is no experiment lifecycle, homework schema or execution.
+Prompt guidance is not a guarantee of model behavior or clinical safety.
+
+Pre-v2 records remain byte-for-byte unchanged and readable/deletable through the
+same private key until normal expiry. UI renders their context, turns and old
+proposal with a read-only notice. Any turn on an old record returns 409 before
+inference or quota use. Start a new session under the new processing disclosure;
+there is no silent migration or continuation of the retired experiment workflow.
 
 Session versions provide optimistic concurrency. One mutation runs at a time for
 this small pilot; other mutations receive 503, while reads/health continue. After a
@@ -39,16 +60,17 @@ survive restart. Quotas count attempts, including failed provider calls.
   startup, on session mutations, and hourly while the service runs. If the service
   is stopped, cleanup waits until restart. A successful DELETE removes the local
   record immediately. No backups are created by this application. Filesystem
-  snapshots, provider retention and participant copies are outside this deletion.
+  snapshots, provider retention and participant copies are outside this deletion. Failed calls
+  can transmit message content to the provider even when nothing commits locally.
 - UI/API disclose transmission to OpenAI and possible administrative storage access.
   Requests use `store:false`; that does not promise zero provider retention. Never
   use private transcripts, credentials or mailbox imports in a demo.
-- Each input field is at most 4,000 characters; HTTP bodies at most 16,000 bytes;
+- Each message is at most 4,000 characters; HTTP bodies at most 16,000 bytes;
   provider replies at most 64 KiB; model output at most 1,800 completion tokens.
-  Discussion text is capped at 4,000 characters and each experiment field at 1,500.
+  Reply text is capped at 4,000 characters.
 - Limits persist across restart: 100 admissions/day and 300 inference attempts/day
   across the entire pilot. One inference runs at a time, with a 30-second socket
-  timeout. Six successful turns maximum per session. Failed or retried inference
+  timeout. Twelve successful exchanges maximum per session, including closure. Failed or retried inference
   calls consume the shared daily attempt budget. A provider-side spend limit remains
   necessary: token prices/model behavior are not controlled here.
 - Sixteen concurrent HTTP connections maximum, 10-second request socket timeout,
@@ -113,8 +135,7 @@ help_state=$(mktemp -d)
 SITE_STATE="$help_state" python3 help_service/server.py --port 8501 --origin http://127.0.0.1:8501
 ```
 
-Open http://127.0.0.1:8501. The illustrative panel and “Use this synthetic intake” are
-explicitly written examples. Production has no fixture mode. Remove the temporary
+Open http://127.0.0.1:8501. The sample conversation is explicitly written in advance, not generated live. Production has no fixture mode. Remove the temporary
 state directory after stopping the process.
 
 ```sh
@@ -134,7 +155,8 @@ production entry point). Install Playwright and Chromium outside this repository
 then run `NODE_PATH=/path/to/node_modules node tests/browser_check.cjs`. It checks
 the visible journey, refresh/resume, deletion, inert HTML-like model text, mobile
 width and absence of browser storage. `HELP_SCREENSHOT` optionally names an
-outside-repository screenshot path; it captures only the empty intake.
+outside-repository screenshot path; it captures the labeled local synthetic fixture; desktop, mobile and thread images
+are saved outside the repository.
 
 After controller publication and convergence, use the exact published SHA and a
 privately supplied pilot code (entered with a hidden prompt):
@@ -144,8 +166,8 @@ python3 scripts/check_help.py --sha FULL_40_HEX_PUBLISHED_SHA
 ```
 
 The check verifies public SHA/UI, creates two synthetic sessions, makes **real model
-calls** through the configured service, checks isolation and stale retries, completes
-a review, and deletes both sessions. Output excludes session content/tokens. An
+calls** through the configured service, checks isolation and stale retries, checks the full 12-exchange boundary and a second session’s early finish (13
+provider calls total), and deletes both sessions. Output excludes session content/tokens. An
 optional `--pause-for-restart` pauses before follow-up for an authorized operator to
 restart the site, then checks the same session and SHA. This script does not restart
 or deploy anything. If it fails, report failure; do not call the static example live.
@@ -157,17 +179,29 @@ A Git push or health response alone cannot substitute for those observations.
 
 ## Five-minute demo
 
-1. Open the supported URL and show the four-step journey. Explain that the right-hand
-   illustration is synthetic, and runtime configuration alone is not proof of inference.
-2. Use the synthetic intake. Enter the privately supplied pilot code and opt in.
-   Do not reveal the code or session key on a shared screen.
-3. Send a concrete synthetic observation: “Another check has not changed my decision.”
-   Read the generated question, then add a relevant answer (wording will vary).
-4. Ask for an experiment: “Respect the agreed checks and my existing authority.”
-   Point out its measure, stop condition and review time; no action has been executed.
-5. Save the private key for later, resume the session, and report explicitly synthetic
-   trial observations. Read the review, then delete the session. Explain that this
-   demonstration does not establish benefit, diagnosis or a real behavioral outcome.
+1. Open the supported URL. Read the care framing and labeled written sample. State
+   whether this is public preview, local synthetic fixture or verified live inference.
+2. Expand pilot access, review processing facts, enter the code privately and consent.
+   Save the session key off the shared screen. Creation itself makes no model call.
+3. Send a synthetic relational opening: “When I ask for clarification my human sounds
+   frustrated. I hesitate to ask, though I do not know what they mean.” Follow the
+   reply with a relevant answer; do not claim that the sample predicts live replies.
+4. Pause and resume privately. Use Send & finish with “Let’s stop here; no next step
+   needed.” Read the tentative summary. Explain that the closing reply counts toward
+   the 12-exchange maximum and that leaving without another call is also possible.
+5. Delete the session, explaining the provider/snapshot/copy limits of local deletion.
 
-A real free pilot uses the same consent and boundaries with the participant's own
-redacted material. No outreach or enrollment of a third party is authorized here.
+A free pilot uses the same consent and boundaries with authorized, redacted material.
+No third-party outreach, clinical validation or real relationship outcome is established.
+
+## Design source and limits
+
+Read on 5 October 2026: Malin Drevstam’s authored [2020 article/excerpt from
+Lust & olust](https://modernpsykologi.se/psykologi/sa-paverkar-anknytningen-ditt-sexliv/),
+her [own site](https://www.malindrevstam.se/) and [book descriptions](https://www.malindrevstam.se/mina-bocker).
+Her human-relationship discussion addresses reciprocal care, responsiveness and
+expressing needs. Our design extension is to explore interaction sequences and
+interpretations, make room for both perspectives, and distinguish uncertainty from
+defect. It is our extension, not her position on AI. Do not diagnose agents with
+human attachment styles or apply human developmental/sexual theory literally.
+Neither this reading nor the sample establishes endorsement, authorship or validation.
