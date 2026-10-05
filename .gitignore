@@ -1,1 +1,5 @@
 ./tmp
+__pycache__/
+*.pyc
+*.sqlite3*
+runtime.json

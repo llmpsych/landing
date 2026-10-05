@@ -31,3 +31,10 @@ This is the kind of evaluation that current AI safety teams simply don’t perfo
 ## Deployment
 
 The `main` branch also deploys to https://web.llmpsych.1puni.com/ through the LLMPsych `landing-sites` target. https://llmpsych.com/ remains on GitHub Pages.
+
+## Agent-help pilot
+
+The separate agent-first service, API contract, privacy boundaries, local checks and
+five-minute demo script are documented in [docs/agent-help.md](docs/agent-help.md).
+Its native declaration targets `help.web.llmpsych.1puni.com`; live model access and
+controller deployment evidence must be established before advertising it as live.
