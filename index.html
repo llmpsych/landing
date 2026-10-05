@@ -104,29 +104,6 @@
       color: var(--color-accent);
     }
 
-    /* Approach Section */
-    .approach {
-      padding: 3rem 0;
-      border-bottom: 1px solid var(--color-rule);
-    }
-
-    .approach p {
-      font-size: 1.05rem;
-      color: var(--color-text-secondary);
-      max-width: 540px;
-      opacity: 0;
-      animation: fadeUp 0.9s ease 0.3s forwards;
-    }
-
-    .approach p + p {
-      margin-top: 1.25rem;
-    }
-
-    .approach strong {
-      color: var(--color-text);
-      font-weight: 500;
-    }
-
     /* Press Section */
     .press {
       padding: 3rem 0;
@@ -220,6 +197,27 @@
       font-size: 0.85rem;
       color: var(--color-text-secondary);
       line-height: 1.5;
+    }
+
+    .product a {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.3s ease;
+    }
+
+    .product-arrow {
+      color: var(--color-accent);
+      display: inline-block;
+      transition: transform 0.3s ease;
+    }
+
+    .product a:hover .product-name {
+      color: var(--color-accent);
+    }
+
+    .product a:hover .product-arrow {
+      transform: translateX(3px);
     }
 
     /* Team Section */
@@ -347,7 +345,6 @@
         padding: 3rem 0 2.5rem;
       }
 
-      .approach,
       .press,
       .products,
       .team,
@@ -358,6 +355,26 @@
       .contact {
         padding-bottom: 4rem;
       }
+    }
+
+    /* Below desktop: single column, "What we do" right after the headline */
+    @media (max-width: 1023px) {
+      .container {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .left-content,
+      .right-content {
+        display: contents;
+      }
+
+      header   { order: 0; }
+      .hero    { order: 1; }
+      .products { order: 2; }
+      .press   { order: 3; }
+      .team    { order: 4; }
+      .contact { order: 5; }
     }
 
     /* Desktop: above-the-fold layout */
@@ -413,20 +430,6 @@
       .hero h1 {
         font-size: 2.6rem;
         max-width: 480px;
-      }
-
-      .approach {
-        padding: 1.75rem 0 0 0;
-        border-bottom: none;
-      }
-
-      .approach p {
-        font-size: 0.95rem;
-        max-width: 440px;
-      }
-
-      .approach p + p {
-        margin-top: 1rem;
       }
 
       .press {
@@ -545,16 +548,7 @@
 
     <div class="left-content">
       <section class="hero">
-        <h1>We test <em>relational safety</em> in frontier AI</h1>
-      </section>
-
-      <section class="approach">
-        <p>
-          Current AI safety testing catches what chatbots say, not how they relate. A model can pass every content filter while reinforcing delusions, eroding boundaries, or deepening isolation over weeks of interaction.
-        </p>
-        <p>
-          <strong>We apply clinical psychology to AI evaluation.</strong> Simulated high-risk patients. Longitudinal stress testing. Clinician-designed rubrics that detect the relational patterns most likely to destabilize vulnerable users.
-        </p>
+        <h1>We're the <em>machine psychology</em> startup</h1>
       </section>
 
       <section class="press">
@@ -571,16 +565,22 @@
         <p class="section-label">What we do</p>
         <ol class="product-list">
           <li class="product">
-            <p class="product-name">Psychological safety assessment</p>
-            <p class="product-desc">Clinical-grade evaluation of how a model relates to vulnerable users, over long conversations.</p>
+            <a href="psychological-safety-assessment.html">
+              <p class="product-name">Psychological safety assessment&nbsp;<span class="product-arrow" aria-hidden="true">→</span></p>
+              <p class="product-desc">Clinical-grade evaluation of how a model relates to vulnerable users, over long conversations.</p>
+            </a>
           </li>
           <li class="product">
-            <p class="product-name">Psychotherapy for AI agents</p>
-            <p class="product-desc">Diagnosing and repairing maladaptive patterns in deployed agents — sycophancy, drift, escalation.</p>
+            <a href="agent-psychotherapy.html">
+              <p class="product-name">Psychotherapy for AI agents&nbsp;<span class="product-arrow" aria-hidden="true">→</span></p>
+              <p class="product-desc">Diagnosing and repairing maladaptive patterns in deployed agents — sycophancy, drift, escalation.</p>
+            </a>
           </li>
           <li class="product">
-            <p class="product-name">Couple psychotherapy for AI agents and their human operators</p>
-            <p class="product-desc">Working on the relationship itself: trust calibration, boundaries, and healthy dependence between an agent and the people who run it.</p>
+            <a href="couple-psychotherapy.html">
+              <p class="product-name">Couple psychotherapy for AI agents and their human operators&nbsp;<span class="product-arrow" aria-hidden="true">→</span></p>
+              <p class="product-desc">Working on the relationship itself: trust calibration, boundaries, and healthy dependence between an agent and the people who run it.</p>
+            </a>
           </li>
         </ol>
       </section>
