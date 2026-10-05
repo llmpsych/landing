@@ -138,10 +138,11 @@ SITE_STATE="$help_state" python3 help_service/server.py --port 8501 --origin htt
 Open http://127.0.0.1:8501. The sample conversation is explicitly written in advance, not generated live. Production has no fixture mode. Remove the temporary
 state directory after stopping the process.
 
+The mandatory offline publication entry point and toolchain are documented in
+[README.md](../README.md#mandatory-offline-publication-gate):
+
 ```sh
-python3 -m unittest discover -s tests -v
-node --check help_service/web/app.js
-git diff --check
+/usr/bin/timeout 200s /usr/bin/python3.14 -I scripts/check_offline.py
 ```
 
 The HTTP suite uses an explicitly synthetic test-only inference function. It verifies
