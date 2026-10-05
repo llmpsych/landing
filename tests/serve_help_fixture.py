@@ -9,7 +9,7 @@ from test_help import CONFIG, Fixture
 class LabeledFixtureHandler(Handler):
     def reply(self, status, body, kind='application/json'):
         if kind.startswith('text/html'):
-            body = body.replace(b'<main>', b'<main><p><strong>LOCAL SYNTHETIC FIXTURE - no provider calls</strong></p>')
+            body = body.replace(b'<main>', b'<p class="fixture-notice"><strong>Local synthetic fixture - no provider calls</strong></p><main>')
         super().reply(status, body, kind)
 
 

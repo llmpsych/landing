@@ -273,3 +273,64 @@ interpretations, make room for both perspectives, and distinguish uncertainty fr
 defect. It is our extension, not her position on AI. Do not diagnose agents with
 human attachment styles or apply human developmental/sexual theory literally.
 Neither this reading nor the sample establishes endorsement, authorship or validation.
+
+## Conversation interface design (5 October 2026)
+
+The help UI puts the actual opening question and pilot entry in the first laptop
+viewport. A compact purpose column explains the agent-first relational stance;
+on phones it reduces to a short introduction. Cool paper, ink blue and muted
+violet replace the earlier cream/green serif treatment. Native sans typography,
+a light question heading and a single conversation surface keep attention on
+reading and replying. No external fonts, imagery or dependencies are required.
+The main research landing is unchanged.
+
+Entry expands into pilot authorization and processing consent. Core provider,
+fallback, retention and key-authority information is visible before consent;
+precise cleanup/deletion limits remain available in an adjacent disclosure and
+on the API/privacy page. The written example is optional and explicitly labeled.
+Session keys stay in page memory. Waiting prevents duplicate submissions and
+editing of the in-flight draft; failure preserves the draft and directs users to
+reload before retrying an uncertain result. New replies receive keyboard focus;
+errors receive focus on failure. Completed and old read-only sessions retain
+key access and deletion. There is no automatic inference or changed server/API
+contract.
+
+Three visual passes were reviewed against local synthetic fixtures:
+
+1. Replace the prose hero with a two-column purpose/question layout and immediate
+   entry. The initial browser render caught the fixture banner becoming a grid
+   child; the test banner now lives outside the product layout.
+2. Desktop/mobile screenshots showed that phone entry was still too low and
+   session controls too tall. Reduce the mobile introduction/question scale and
+   key/toolbar spacing; keep the composer and conversation visually dominant.
+3. Review consent, empty, waiting, error, resume, completed, read-only and API
+   states. Lighten heading weights, remove a redundant label, quiet the panel and
+   use ink for primary actions after independent critique of the purple form
+   treatment. Fix the mobile headline's collapsed line-break spacing. Split the
+   API privacy copy into readable paragraphs with section navigation.
+
+Local visual evidence from this task is under `/tmp/help-design-dc33166/` (outside
+source; these are synthetic UI artifacts, not live acceptance). `before-desktop.png`
+and `before-mobile.png` capture the rejected layout. `pass1-corrected-desktop.png`,
+`pass1-corrected-mobile.png` and `pass1-corrected-mobile-thread.png` are the first
+reviewed build. Final `refined-` images include `desktop`, `mobile`, `thread`,
+`mobile-thread`, `consent-1272`, `empty`, `waiting`, `error`, `resume`,
+`completed-1272`, `completed-390`, `final-exchange-mobile`, `legacy`, `unavailable`,
+`narrow-entry`, `narrow-consent-focus`, `api-desktop`, `api-mobile` and
+`api-mobile-viewport` (all `.png`).
+
+Reproduce with the existing external Playwright installation:
+
+```sh
+NODE_PATH=/path/to/node_modules HELP_SCREENSHOT=/tmp/help-review node tests/browser_check.cjs
+```
+
+The expanded browser journey checks 1272px desktop, 390px phone and 320px narrow
+layouts; overflow, keyboard focus, token contrast (at least 4.5:1 for tested text
+pairs), pending/error draft preservation, early finish, twelve-exchange closure,
+resume/deletion, read-only records, unavailable status and API navigation. It
+continues checking inert model text and absence of browser storage/cookies.
+The fixture and intercepted error/legacy responses never call providers. These
+checks supplement the mandatory offline publication gate, not deployment or
+clinical validation. Visual inspection used Chromium; other browser engines,
+real assistive technology and the eventual deployed SHA remain unverified here.
