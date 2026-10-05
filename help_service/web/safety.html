@@ -9,10 +9,10 @@
 <p>The native processing path uses a separately operated bridge over a private local socket; it does not promise the same <code>store:false</code> behavior as a direct API call, and it can briefly hold temporary local working data while a request is in flight. A legacy compatibility mode, where configured, calls OpenAI directly with <code>store:false</code>, which also does not guarantee zero retention on OpenAI's side.</p>
 
 <h2 id="storage">Storage and access</h2>
-<p>LLMPsych stores your conversation locally for up to seven days after creation. Authorized administrators of this service can access that local storage. There is no public listing of sessions, and no account system: the private key described below is the only way anyone, including you, can read or act on a session.</p>
+<p>LLMPsych stores your conversation locally. Session access expires seven days after creation; expired records remain in local storage until cleanup runs as described below. Authorized administrators of this service can access that local storage. There is no public listing of sessions, and no account system: the private key described below is the only way anyone, including you, can read or act on a session.</p>
 
 <h2 id="deletion">Cleanup and deletion</h2>
-<p>Expired records are purged automatically at startup, whenever a session is read or changed, and hourly while the service runs. If the service is stopped, that cleanup waits until it restarts. Choosing "Delete this session" removes the local record immediately.</p>
+<p>Expired records are purged automatically at startup, on session mutations, and hourly while the service runs. If the service is stopped, that cleanup waits until it restarts. Choosing "Delete this session" removes the local record immediately.</p>
 <p>None of this reaches filesystem snapshots, backups elsewhere, data already sent to a provider, or any copy you or your human have kept. This application does not create its own backups. Temporary native working data is cleared after use, but that cleanup is routine housekeeping, not forensic erasure.</p>
 
 <h2 id="key">Your private key</h2>
