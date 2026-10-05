@@ -38,9 +38,9 @@ summarizes tentatively without requiring a response. Optional next steps depend 
 participant wishes. There is no experiment lifecycle, homework schema or execution.
 Prompt guidance is not a guarantee of model behavior or clinical safety.
 
-Pre-v2 records remain byte-for-byte unchanged and readable/deletable through the
+Pre-v2 records and conversations with the earlier OpenAI-only processing consent remain byte-for-byte unchanged and readable/deletable through the
 same private key until normal expiry. UI renders their context, turns and old
-proposal with a read-only notice. Any turn on an old record returns 409 before
+proposal with a read-only notice. Any turn on a record without the current processing consent returns 409 before
 inference or quota use. Start a new session under the new processing disclosure;
 there is no silent migration or continuation of the retired experiment workflow.
 
@@ -62,15 +62,18 @@ survive restart. Quotas count attempts, including failed provider calls.
   record immediately. No backups are created by this application. Filesystem
   snapshots, provider retention and participant copies are outside this deletion. Failed calls
   can transmit message content to the provider even when nothing commits locally.
-- UI/API disclose transmission to OpenAI and possible administrative storage access.
-  Requests use `store:false`; that does not promise zero provider retention. Never
+- UI/API disclose configured OpenAI, Anthropic or Z.AI processing, possible fallback to
+  another provider, local temporary native working data and administrative storage
+  access. Native CLI processing does not promise API `store:false` semantics;
+  cleanup is not forensic erasure or a provider-retention guarantee. Legacy API
+  mode requests `store:false`, which also does not promise zero retention. Never
   use private transcripts, credentials or mailbox imports in a demo.
 - Each message is at most 4,000 characters; HTTP bodies at most 16,000 bytes;
   provider replies at most 64 KiB; model output at most 1,800 completion tokens.
   Reply text is capped at 4,000 characters.
 - Limits persist across restart: 100 admissions/day and 300 inference attempts/day
-  across the entire pilot. One inference runs at a time, with a 30-second socket
-  timeout. Twelve successful exchanges maximum per session, including closure. Failed or retried inference
+  across the entire pilot. One inference runs at a time, with a 180-second native socket
+  timeout (30 seconds for legacy API mode). Twelve successful exchanges maximum per session, including closure. Failed or retried inference
   calls consume the shared daily attempt budget. A provider-side spend limit remains
   necessary: token prices/model behavior are not controlled here.
 - Sixteen concurrent HTTP connections maximum, 10-second request socket timeout,
@@ -89,32 +92,46 @@ knowledge-ingestion handoff commit `0ee5b35be38b80136c85aba80815e69bf8240d09`,
 `steward/sites/README.md`. Protected installed policy/port availability and controller
 receipts still need confirmation; this source does not reserve a port.
 
-Native `SITE_STATE` is `/var/lib/llmpsych-sites/llp-web-help`. The application currently
-expects a private `runtime.json` there with exactly these keys:
+Native `SITE_STATE` is `/var/lib/llmpsych-sites/llp-web-help`. A private,
+non-symlink `runtime.json` selects exactly one mode. The authorized bootstrap uses:
 
 ```json
-{"api_key":"DEDICATED APPLICATION KEY", "model":"AUTHORIZED MODEL ID", "pilot_code":"RANDOM SECRET OF AT LEAST 24 CHARACTERS"}
+{"native_socket":"/run/llmpsych-help-inference/inference.sock","pilot_code":"RANDOM SECRET OF AT LEAST 24 CHARACTERS"}
 ```
 
-This is a configuration **contract**, not permission or instructions to copy secrets
-into state manually. A matching source-only protected binding is retained in knowledge-ingestion
-commit `f4a3ab3cca6d4424cac43914aefdca40841314b9`,
-`steward/sites/model-binding/README.md` and `50-model.conf`. It uses a required
-read-only OS bind for this site's runtime file, without a broker or schema change.
-The final reader keeps that exact contract. The binding is **uninstalled and
-runtime-unverified**; consult that owning handoff for approval, installation,
-rotation and UID/mount verification. The operator must authorize the model,
-provider data handling and spend limits before protected installation. No environment search, steward login, GG auth,
-controller execution or generic inference broker is used. Do not commit a runtime file,
-put credentials in argv, or use a real key for fixture tests. Missing configuration
-serves the UI with a clear unavailable notice and rejects new sessions with 503.
+The application sends HTTP POST `/v1/chat/completions` over that fixed Unix socket.
+It sends bounded messages, JSON response schema and `max_completion_tokens:1800`,
+without a model selector, provider credential or `store` promise. It accepts only
+HTTP 200, at most 64 KiB, `choices[0].finish_reason:stop` and JSON content with one
+bounded `reply`. No redirects or participant-selected endpoints exist. Native
+socket errors, timeouts and invalid replies return an honest 502 with the session
+unchanged; the attempt still counts. The app does not fall back to sample replies.
+The checker waits 195 seconds; the bridge must bound total native execution and
+fallback within the app's 180-second socket timeout. On a lost response, GET first.
 
-The fixed HTTPS provider request is documented in the
-[official OpenAI Chat Completions API reference](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create):
-structured JSON output, bounded completion tokens and `store:false`. The operator's
-selected model must support this contract. Redirects are rejected; no caller controls
-the provider URL. Model refusal, timeout, malformed JSON or incomplete output returns
-502 without changing session content.
+The separately owned bridge selects the operator-configured native models and
+provider fallback order. Provider fallback
+belongs to that bridge, not the app. App session keys and pilot code never enter
+its inference payload. The service stays under its own site identity, receives no
+raw provider login, and never launches the native tools itself. The existing pilot admission gate and usage limits remain; this is not public signup.
+Protected socket access, bridge execution isolation, ephemeral working-data cleanup
+and runtime binding must be installed and attested by the owning runtime. Source
+support and configuration presence are not evidence of a successful native call.
+
+For compatibility, the alternative mode is exactly `api_key`, `model`, `pilot_code`
+(nonempty strings, pilot code at least 24 characters). It uses fixed OpenAI HTTPS
+Chat Completions, structured JSON and `store:false`. Mixed modes/unknown keys or
+any other native socket path fail startup. Both modes require private file
+permissions with no group/other bits; missing configuration serves the unavailable
+UI and rejects admissions. No environment/auth discovery exists.
+
+The earlier protected API-file proposal lives in private knowledge-ingestion
+`f4a3ab3cca6d4424cac43914aefdca40841314b9`; acceptance preparation was reconciled at
+`2dbd290019369b822312f0e5cf91c87c57bf998d` against the previous conversational
+reader. Those are historical source artifacts, not acceptance of this new native
+contract. The runtime owner must supply matching installation evidence and a
+permitted private pilot-code path before live acceptance. Never commit runtime
+inputs or put credentials in argv. Tests use only local synthetic Unix fixtures.
 
 The installed driver grants writes only to SITE_STATE; it injects neither PORT nor SHA.
 `/healthz` captures the full SHA once from the resolved immutable release directory

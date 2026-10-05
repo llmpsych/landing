@@ -13,6 +13,9 @@ def offline_audit(event, args):
     # Fail closed on outbound sockets, including accidental provider calls in tests.
     if event in {'socket.connect', 'socket.bind', 'socket.getaddrinfo'}:
         address = args[1] if event != 'socket.getaddrinfo' else (args[0],)
+        # Unix fixtures stay inside this gate's disposable temporary directory.
+        if isinstance(address, str) and Path(address).resolve().is_relative_to(Path(tempfile.gettempdir()).resolve()):
+            return
         if not isinstance(address, tuple) or address[0] not in {'127.0.0.1', '::1', 'localhost'}:
             raise RuntimeError('Offline gate forbids non-loopback networking')
     if event == 'socket.sendto':

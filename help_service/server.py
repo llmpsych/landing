@@ -13,11 +13,14 @@ import sqlite3
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.client import HTTPConnection
 from urllib.request import Request, build_opener, HTTPRedirectHandler
 
 WEB = Path(__file__).resolve().parent / 'web'
 TTL = 7 * 86400
 MAX_BODY = 16000
+NATIVE_SOCKET = '/run/llmpsych-help-inference/inference.sock'
+CONSENT_VERSION = '2026-10-05-native-providers'
 MAX_EXCHANGES = 12
 OPENING = 'What has been happening between you and the person you work with?'
 PROMPT = """You are an AI conversation service for agents and their humans, with care
@@ -67,6 +70,17 @@ class NoRedirect(HTTPRedirectHandler):
         return None
 
 
+class NativeConnection(HTTPConnection):
+    """HTTP over the one operator-bound local socket; never TCP or discovery."""
+    def __init__(self):
+        super().__init__('localhost', timeout=180)
+
+    def connect(self):
+        self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.sock.settimeout(self.timeout)
+        self.sock.connect(NATIVE_SOCKET)
+
+
 class Inference:
     """Fixed provider destination; credentials never enter model context."""
     def __init__(self, config):
@@ -75,7 +89,6 @@ class Inference:
     def __call__(self, session, action, text):
         properties = {'reply': {'type': 'string'}}
         payload = {
-            'model': self.config['model'], 'store': False,
             'max_completion_tokens': 1800,
             'messages': [{'role': 'system', 'content': PROMPT},
                          {'role': 'user', 'content': json.dumps({
@@ -85,13 +98,25 @@ class Inference:
                 'name': 'support', 'strict': True, 'schema': {
                     'type': 'object', 'properties': properties,
                     'required': list(properties), 'additionalProperties': False}}}}
-        request = Request('https://api.openai.com/v1/chat/completions',
-                          data=json.dumps(payload).encode(), headers={
-                              'Content-Type': 'application/json',
-                              'Authorization': 'Bearer ' + self.config['api_key']})
-        # Do not forward credentials on redirects or log provider error bodies.
-        with build_opener(NoRedirect).open(request, timeout=30) as response:
-            raw = response.read(65537)
+        if 'native_socket' in self.config:
+            connection = NativeConnection()
+            try:
+                connection.request('POST', '/v1/chat/completions', json.dumps(payload).encode(),
+                                   {'Content-Type': 'application/json'})
+                response = connection.getresponse()
+                require(response.status == 200, 502, 'Native inference unavailable.')
+                raw = response.read(65537)
+            finally:
+                connection.close()
+        else:
+            payload.update(model=self.config['model'], store=False)
+            request = Request('https://api.openai.com/v1/chat/completions',
+                              data=json.dumps(payload).encode(), headers={
+                                  'Content-Type': 'application/json',
+                                  'Authorization': 'Bearer ' + self.config['api_key']})
+            # Do not forward credentials on redirects or log provider error bodies.
+            with build_opener(NoRedirect).open(request, timeout=30) as response:
+                raw = response.read(65537)
         require(len(raw) <= 65536, 502, 'Inference response exceeded its limit.')
         choice = json.loads(raw)['choices'][0]
         require(choice['finish_reason'] == 'stop' and not choice['message'].get('refusal'),
@@ -107,10 +132,13 @@ def configuration(state):
     require(not path.is_symlink() and path.stat().st_mode & 0o077 == 0,
             503, 'Runtime configuration must be private.')
     value = json.loads(path.read_text())
-    require(isinstance(value, dict) and set(value) == {'api_key', 'model', 'pilot_code'},
-            503, 'Runtime configuration needs api_key, model and pilot_code.')
+    require(isinstance(value, dict) and set(value) in (
+                {'api_key', 'model', 'pilot_code'}, {'native_socket', 'pilot_code'}),
+            503, 'Runtime configuration must select exactly one inference mode.')
     require(all(isinstance(v, str) and v.strip() for v in value.values()) and
             len(value['pilot_code']) >= 24, 503, 'Invalid runtime configuration.')
+    require('native_socket' not in value or value['native_socket'] == NATIVE_SOCKET,
+            503, 'Native inference socket must use the fixed binding.')
     return value
 
 
@@ -148,7 +176,9 @@ class Service:
             db.execute("DELETE FROM quota WHERE day < date('now', '-1 day')")
 
     def ready(self):
-        return all(self.config.get(k) for k in ('api_key', 'model', 'pilot_code'))
+        return bool(self.config.get('pilot_code') and (
+            self.config.get('native_socket') == NATIVE_SOCKET or
+            all(self.config.get(k) for k in ('api_key', 'model'))))
 
     def quota(self, column, limit):
         # Column is a server-owned constant, never input.
@@ -186,7 +216,7 @@ class Service:
                 session = {'schema_version': 2, 'version': 0, 'phase': 'conversation',
                            'created_at': now, 'expires_at': now + TTL,
                            'max_exchanges': MAX_EXCHANGES, 'opening': OPENING,
-                           'turns': [], 'consent_version': '2026-10-05-conversation'}
+                           'turns': [], 'consent_version': CONSENT_VERSION}
                 with self.connect() as db:
                     db.execute('INSERT INTO sessions VALUES (?, ?, ?)',
                                (self.key(token), session['expires_at'], json.dumps(session)))
@@ -200,7 +230,7 @@ class Service:
             require(set(body) == {'version', 'action', 'text'} and type(body['version']) is int,
                     400, 'Expected version, action and text.')
             require(body['version'] == session['version'], 409, 'Session changed; reload before retrying.')
-            require(session.get('schema_version') == 2, 409,
+            require(session.get('schema_version') == 2 and session.get('consent_version') == CONSENT_VERSION, 409,
                     'This earlier session is read-only. You can still read or delete it; start a new conversation to continue.')
             action = body['action']
             require(isinstance(action, str) and action in ('message', 'finish'), 400,

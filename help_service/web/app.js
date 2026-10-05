@@ -21,12 +21,12 @@ function bubble(who, text) {
 }
 function render() {
   $('onboarding').hidden = true; $('conversation').hidden = false;
-  const legacy = session.schema_version !== 2;
+  const legacy = session.schema_version !== 2 || session.consent_version !== '2026-10-05-native-providers';
   const ended = legacy || session.phase === 'complete';
   $('phase').textContent = legacy ? 'Earlier session · read-only' : `${session.version} of ${session.max_exchanges} exchanges · ${ended ? 'ended' : 'you can pause or finish sooner'}`;
   $('session-key').value = token;
   $('turns').replaceChildren();
-  if (legacy) bubble('Earlier context', JSON.stringify(session.intake, null, 2));
+  if (session.intake) bubble('Earlier context', JSON.stringify(session.intake, null, 2));
   else bubble('Help · opening question', session.opening);
   for (const turn of session.turns) { bubble('You', turn.input); bubble('Help', turn.reply); }
   if (legacy && session.experiment) bubble('Earlier proposal', JSON.stringify(session.experiment, null, 2));

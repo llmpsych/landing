@@ -22,7 +22,7 @@ def check(base, sha, pilot_code, pause=None):
                       data=None if body is None else json.dumps(body).encode(),
                       headers={'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token})
         try:
-            response = opener.open(req, timeout=45)
+            response = opener.open(req, timeout=195)
         except HTTPError as error:
             response = error
         with response:
