@@ -22,7 +22,7 @@ const assert = require('node:assert/strict');
       const rgb = hex.match(/\w\w/g).map(v => parseInt(v,16)/255).map(v => v <= .04045 ? v/12.92 : ((v+.055)/1.055)**2.4);
       return rgb[0]*.2126 + rgb[1]*.7152 + rgb[2]*.0722;
     };
-    for (const [foreground,background] of [['1c2420','ffffff'],['5c6a62','eef1ea'],['2c4d3c','eef1ea'],['ffffff','1c2420'],['8a2f3f','fbeaec'],['8a5a2b','ffffff']]) {
+    for (const [foreground,background] of [['293b36','fffef9'],['52665c','f5f3ec'],['52665c','edf1e9'],['345c48','f5f3ec'],['ffffff','345c48'],['963726','fbece7'],['8a5a2b','fffef9']]) {
       const values = [luminance(foreground),luminance(background)].sort((a,b) => b-a);
       assert((values[0]+.05)/(values[1]+.05) >= 4.5, 'Token contrast: ' + foreground);
     }
